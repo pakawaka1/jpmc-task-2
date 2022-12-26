@@ -8,6 +8,8 @@ import './App.css';
  */
 interface IState {
   data: ServerRespond[],
+  // boolean for to showGraph when user clicks on the "Start Streaming" button;
+  showGraph: boolean
 }
 
 /**
@@ -22,6 +24,8 @@ class App extends Component<{}, IState> {
       // data saves the server responds.
       // We use this state to parse data down to the child element (Graph) as element property
       data: [],
+      // initial state, graph will not render;
+      showGraph: false
     };
   }
 
@@ -29,24 +33,34 @@ class App extends Component<{}, IState> {
    * Render Graph react component with state.data parse as property data
    */
   renderGraph() {
-    return (<Graph data={this.state.data}/>)
+    // if user clicks on the "Start Streaming" button, graph will render with data
+    if (this.state.showGraph) return (<Graph data={this.state.data}/>)
   }
 
   /**
    * Get new data from server and update the state with the new data
    */
   getDataFromServer() {
-    DataStreamer.getData((serverResponds: ServerRespond[]) => {
-      // Update the state by creating a new array of data that consists of
-      // Previous data in the state and the new data from server
-      this.setState({ data: [...this.state.data, ...serverResponds] });
-    });
-  }
+    // variable for setInterval time;
+    let x = 0;
+    // create interval variable to setInterval wrapper for streaming;
+    const interval = setInterval(() => {
+      DataStreamer.getData((serverResponds: ServerRespond[]) => {
+        // Update the state by creating a new array of data that consists of
+        // Previous data in the state and the new data from server
+        this.setState({ data: serverResponds, showGraph: true });
+      });
+      /// increment our timer
+      x++;
+      // once time has reached 1000, we clear the intervals
+      if (x > 1000) clearInterval(interval);
+    }, 100);
+  };
 
   /**
    * Render the App react component
    */
-  render() {
+  render(): JSX.Element {
     return (
       <div className="App">
         <header className="App-header">
